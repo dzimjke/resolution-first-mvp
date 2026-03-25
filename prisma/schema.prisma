@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id             String   @id @default(cuid())
+  name           String?
+  inviteCodeHash String   @unique
+  createdAt      DateTime @default(now())
+
+  members        Member[]
+  decisions      Decision[]
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  email     String
+  createdAt DateTime @default(now())
+
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+
+  sessions  Session[]
+
+  @@unique([teamId, email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId  String
+}
+
+model Decision {
+  id                String   @id @default(cuid())
+  title             String
+  firstAction       String
+  timeWindowMinutes Int
+  thresholdPercent  Float
+  status            String
+  teamId            String
+  observedUplift    Float?
+  sampleSize        Int?
+  resolvedAt        DateTime?
+  outcome           String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  team              Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  expectations      Expectation[]
+  resolution        Resolution?
+  postMortem        PostMortem?
+}
+
+model Expectation {
+  id         String   @id @default(cuid())
+  decision   Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  decisionId String
+
+  role       String
+  choice     String
+
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model Resolution {
+  id             String   @id @default(cuid())
+  decision       Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  decisionId     String   @unique
+
+  outcome        String
+  observedUplift Float?
+  sampleSize     Int?
+  resolvedAt     DateTime?
+}
+
+model PostMortem {
+  id               String   @id @default(cuid())
+  decision         Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  decisionId       String   @unique
+
+  businessErrorPp  Float?
+  expectationErrorPp  Float?
+  whatWeMisjudged  String?
+  decisionTaken    String?
+  learningCaptured String?
+
+  createdAt        DateTime @default(now())
+}
