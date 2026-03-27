@@ -3,7 +3,7 @@ const { createHash } = require("node:crypto");
 
 const prisma = new PrismaClient();
 
-function sha256(input) {
+function sha256(input: string) {
   return createHash("sha256").update(input).digest("hex");
 }
 
