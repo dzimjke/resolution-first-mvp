@@ -64,10 +64,12 @@ export async function POST(request: Request) {
     setSessionCookie(token, expiresAt);
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error("Login error:", error);
+
     return NextResponse.json(
-      { error: "Invalid request body." },
-      { status: 400 }
+      { error: String(error) },
+      { status: 500 }
     );
   }
 }
